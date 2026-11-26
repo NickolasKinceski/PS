@@ -7,6 +7,7 @@
  */
 public class Leitor extends Usuario {
 
+    private int id;
     private int limiteEmprestimos;
     private int livrosEmMaos;
 
@@ -14,6 +15,15 @@ public class Leitor extends Usuario {
         super(nome, matricula);
         this.limiteEmprestimos = limiteEmprestimos;
         this.livrosEmMaos = 0;
+    }
+
+    public Leitor(int id, String nome, String matricula, int limiteEmprestimos) {
+        this(nome, matricula, limiteEmprestimos);
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public int getLimiteEmprestimos() {

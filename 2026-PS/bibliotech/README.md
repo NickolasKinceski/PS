@@ -97,3 +97,27 @@ Para recriar a estrutura do banco bibliotech em um ambiente limpo:
 | P3 | Cadastro de livro nao compilava (required: String,String,int; found: Livro). | Chamada passava objeto Livro em vez de tres parametros. | Criacao de TelaCadastroLivro.java e botao Novo livro na TelaLivros.java. | Validacoes na tela e TesteCorrecoes P3 passou. |
 | P4 | Buscas por ID e titulo diziam "nao encontrado" com MariaDB parado. | LivroDAO retornava null/vazio no catch de SQLException. | Lancamento de PersistenciaException no LivroDAO e catch na TelaLivros. | Caixa de erro de conexao com tabela preservada. |
 | P5 | Operacoes de escrita precisavam separar erro de banco de registro inexistente. | SQLException precisava propagar PersistenciaException separado de false. | Propagacao de PersistenciaException nos metodos de escrita e TelaCadastroLivro. | TesteCorrecoes: P5 passou (6/6). |
+
+## 7. Leitores (Aula 48)
+
+O cadastro de leitores passou a morar no banco. O caminho de um leitor, da tabela ate a janela:
+
+| Camada | Arquivo | O que faz |
+|---|---|---|
+| tabela | banco.sql (tabela leitores) | guarda nome, matricula (sem repeticao) e limite de emprestimos |
+| classe | Leitor.java | o leitor em Java, agora com o id que o banco deu |
+| DAO | LeitorDAO.java | cadastra, busca por matricula, lista e exclui |
+| regras | ValidadorLeitor.java | nome e matricula obrigatorios, limite de 1 a 5 |
+| janela | TelaLeitores.java | formulario de cadastro, tabela dos leitores e botao para excluir selecionado |
+| teste | TesteLeitores.java | 10 verificacoes do RF02 e do ValidadorLeitor contra o banco |
+
+Para conferir:
+
+    sudo mariadb < banco.sql
+    javac -cp ".:lib/*" *.java
+    java -cp ".:lib/*" TesteLeitores
+    java -cp ".:lib/*" TelaLeitores
+
+Funcionalidade extra (Nivel A): o botao Excluir selecionado na TelaLeitores pede confirmacao antes de chamar LeitorDAO.excluirLeitor(id) e trata falhas de conexao com o MariaDB. Testado selecionando um leitor na tabela, confirmando a exclusao e verificando a atualizacao imediata na listagem e no banco.
+
+O que ainda falta: registrar emprestimo e devolucao no banco (hoje eles so existem na memoria, na TelaBiblioteca) e os relatorios.

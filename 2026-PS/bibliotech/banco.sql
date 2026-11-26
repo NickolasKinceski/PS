@@ -11,3 +11,10 @@ CREATE TABLE IF NOT EXISTS livros (
     ano INT NOT NULL,
     capa VARCHAR(255) NULL
 );
+
+CREATE TABLE IF NOT EXISTS leitores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    matricula VARCHAR(20) NOT NULL UNIQUE,
+    limite_emprestimos INT NOT NULL DEFAULT 3
+);
