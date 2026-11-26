@@ -32,7 +32,7 @@ public class LivroDAO {
         }
     }
 
-    // Desafio 1: Verifica se já existe um livro com o mesmo título e autor
+    // Verifica se já existe um livro com o mesmo título e autor
     public boolean existeLivro(String titulo, String autor) {
         String sql = "SELECT COUNT(*) FROM livros WHERE LOWER(TRIM(titulo)) = LOWER(TRIM(?)) AND LOWER(TRIM(autor)) = LOWER(TRIM(?))";
 
@@ -144,5 +144,33 @@ public class LivroDAO {
         }
 
         return null;
+    }
+
+    public List<Livro> buscarLivrosPorTitulo(String termo) {
+        List<Livro> livros = new ArrayList<>();
+        String sql = "SELECT id, titulo, autor, ano, capa FROM livros WHERE LOWER(titulo) LIKE LOWER(?) ORDER BY titulo";
+
+        try (Connection conexao = Conexao.conectar();
+             PreparedStatement comando = conexao.prepareStatement(sql)) {
+
+            comando.setString(1, "%" + termo.trim() + "%");
+
+            try (ResultSet resultado = comando.executeQuery()) {
+                while (resultado.next()) {
+                    int id = resultado.getInt("id");
+                    String titulo = resultado.getString("titulo");
+                    String autor = resultado.getString("autor");
+                    int ano = resultado.getInt("ano");
+                    String capa = resultado.getString("capa");
+
+                    livros.add(new Livro(id, titulo, autor, ano, capa));
+                }
+            }
+
+        } catch (SQLException e) {
+            throw new PersistenciaException("Não foi possível buscar os livros por título.", e);
+        }
+
+        return livros;
     }
 }

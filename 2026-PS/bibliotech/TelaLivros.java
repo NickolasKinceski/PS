@@ -31,7 +31,8 @@ public class TelaLivros extends JFrame {
     private final JTable tabela;
 
     // Controles de busca
-    private final JTextField campoId = new JTextField(6);
+    private final JTextField campoId = new JTextField(5);
+    private final JTextField campoBuscaTitulo = new JTextField(14);
     private final JLabel status = new JLabel("Pronto.");
 
     // Controles de cadastro / seleção de capa
@@ -43,7 +44,7 @@ public class TelaLivros extends JFrame {
 
     public TelaLivros() {
         setTitle("BiblioTech — Gestão e Consulta de Livros");
-        setSize(980, 600);
+        setSize(1020, 620);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
@@ -61,21 +62,30 @@ public class TelaLivros extends JFrame {
         barraBusca.setBackground(Color.WHITE);
         barraBusca.setBorder(BorderFactory.createLineBorder(new Color(215, 222, 230)));
 
-        JLabel lblBusca = new JLabel("ID do livro:");
+        JLabel lblBusca = new JLabel("ID:");
         lblBusca.setFont(FONTE_NEGRITO);
         campoId.setFont(FONTE_PADRAO);
 
         JButton buscar = criarBotao("Buscar por ID", COR_SECUNDARIA);
+
+        JLabel lblBuscaTitulo = new JLabel("Título:");
+        lblBuscaTitulo.setFont(FONTE_NEGRITO);
+        campoBuscaTitulo.setFont(FONTE_PADRAO);
+
+        JButton buscarTitulo = criarBotao("Buscar por título", COR_SECUNDARIA);
         JButton limpar = criarBotao("Limpar", new Color(110, 120, 130));
         JButton atualizar = criarBotao("Atualizar listagem", COR_PRIMARIA);
 
         barraBusca.add(lblBusca);
         barraBusca.add(campoId);
         barraBusca.add(buscar);
+        barraBusca.add(lblBuscaTitulo);
+        barraBusca.add(campoBuscaTitulo);
+        barraBusca.add(buscarTitulo);
         barraBusca.add(limpar);
         barraBusca.add(atualizar);
 
-        // Painel de cadastro rápido com JFileChooser
+        // Painel de cadastro rápido com JFileChooser + janela modal Novo livro
         JPanel painelCadastro = new JPanel(new BorderLayout(10, 5));
         painelCadastro.setBackground(Color.WHITE);
         painelCadastro.setBorder(BorderFactory.createTitledBorder(
@@ -97,6 +107,7 @@ public class TelaLivros extends JFrame {
         JButton btnEscolherCapa = criarBotao("Selecionar Capa...", COR_SECUNDARIA);
         JButton btnSalvarLivro = criarBotao("Salvar Livro", new Color(39, 135, 84));
         JButton btnVincularCapa = criarBotao("Vincular Capa ao Selecionado", new Color(180, 110, 30));
+        JButton btnNovoLivro = criarBotao("Novo livro", new Color(75, 85, 165));
 
         camposForm.add(criarLabel("Título:"));
         camposForm.add(campoTitulo);
@@ -107,6 +118,7 @@ public class TelaLivros extends JFrame {
         camposForm.add(btnEscolherCapa);
         camposForm.add(btnSalvarLivro);
         camposForm.add(btnVincularCapa);
+        camposForm.add(btnNovoLivro);
 
         // Miniatura de pré-visualização da capa
         lblPreviewCapa.setPreferredSize(new Dimension(65, 85));
@@ -155,14 +167,18 @@ public class TelaLivros extends JFrame {
         atualizar.addActionListener(e -> carregarLivros());
         buscar.addActionListener(e -> buscarLivro());
         campoId.addActionListener(e -> buscarLivro());
+        buscarTitulo.addActionListener(e -> buscarPorTitulo());
+        campoBuscaTitulo.addActionListener(e -> buscarPorTitulo());
         limpar.addActionListener(e -> {
             campoId.setText("");
+            campoBuscaTitulo.setText("");
             carregarLivros();
         });
 
         btnEscolherCapa.addActionListener(e -> selecionarImagemCapa());
         btnSalvarLivro.addActionListener(e -> salvarNovoLivro());
         btnVincularCapa.addActionListener(e -> atualizarCapaLivroSelecionado());
+        btnNovoLivro.addActionListener(e -> novoLivro());
 
         carregarLivros();
     }
@@ -259,10 +275,8 @@ public class TelaLivros extends JFrame {
 
             int ano = Integer.parseInt(anoStr);
 
-            // Valida regras de negócio (lança LivroInvalidoException se inválido)
             ValidadorLivro.validar(titulo, autor, ano);
 
-            // Desafio 1: Impede cadastro duplicado de mesmo título e autor
             if (dao.existeLivro(titulo, autor)) {
                 throw new LivroInvalidoException("Já existe um livro cadastrado com este título e autor.");
             }
@@ -439,6 +453,45 @@ public class TelaLivros extends JFrame {
                 JOptionPane.ERROR_MESSAGE
             );
         }
+    }
+
+    private void buscarPorTitulo() {
+        String termo = campoBuscaTitulo.getText().trim();
+        if (termo.isEmpty()) {
+            carregarLivros();
+            return;
+        }
+
+        try {
+            List<Livro> livros = dao.buscarLivrosPorTitulo(termo);
+            modelo.setRowCount(0);
+
+            if (livros.isEmpty()) {
+                status.setText("Nenhum livro encontrado para '" + termo + "'.");
+                JOptionPane.showMessageDialog(this, "Nenhum livro encontrado.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                for (Livro livro : livros) {
+                    adicionarLinha(livro);
+                }
+                status.setText("Livros encontrados: " + livros.size());
+            }
+        } catch (PersistenciaException e) {
+            status.setText("Erro ao consultar o banco.");
+            System.err.println(e.getMessage());
+            e.printStackTrace();
+
+            JOptionPane.showMessageDialog(
+                this,
+                "Não foi possível buscar os livros.\nVerifique a conexão com o MariaDB.",
+                "Erro de conexão",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
+    private void novoLivro() {
+        new TelaCadastroLivro(this).setVisible(true);
+        carregarLivros();
     }
 
     private JButton criarBotao(String texto, Color corFundo) {

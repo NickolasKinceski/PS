@@ -76,3 +76,24 @@ Sistema de emprestimo de livros para a biblioteca do campus.
 ### Classes
 ​
 ![Diagrama de classes do BiblioTech](docs/classes.svg)
+
+## 5. Como recriar o banco de dados
+
+Para recriar a estrutura do banco bibliotech em um ambiente limpo:
+
+1. Inicie o servico do MariaDB: sudo service mariadb start
+2. Execute o script de estrutura como administrador: sudo mariadb < banco.sql
+3. Crie o usuario da aplicacao com menor privilegio (SELECT, INSERT, UPDATE, DELETE):
+   CREATE USER IF NOT EXISTS 'bibliotech'@'localhost' IDENTIFIED BY 'sua_senha';
+   GRANT SELECT, INSERT, UPDATE, DELETE ON bibliotech.* TO 'bibliotech'@'localhost';
+4. Configure DB_USER e DB_PASSWORD no terminal antes de compilar e rodar o sistema.
+
+## 6. Manutencao e correcoes (Aula 47)
+
+| # | Sintoma | Causa | Correcao | Prova |
+|---|---|---|---|---|
+| P1 | Livro carregado do banco aparecia como emprestado. | Construtor com id nao inicializava disponivel (valor padrao false). | Definicao de this.disponivel = true; no construtor com id em Livro.java. | TesteCorrecoes: P1 passou. |
+| P2 | ALTER TABLE recusado com erro 1142 para o usuario bibliotech. | Usuario da aplicacao possui apenas SELECT, INSERT, UPDATE e DELETE. | Criacao do banco.sql com IF NOT EXISTS executado como administrador. | DESCRIBE livros; e execucao dupla de banco.sql sem erro. |
+| P3 | Cadastro de livro nao compilava (required: String,String,int; found: Livro). | Chamada passava objeto Livro em vez de tres parametros. | Criacao de TelaCadastroLivro.java e botao Novo livro na TelaLivros.java. | Validacoes na tela e TesteCorrecoes P3 passou. |
+| P4 | Buscas por ID e titulo diziam "nao encontrado" com MariaDB parado. | LivroDAO retornava null/vazio no catch de SQLException. | Lancamento de PersistenciaException no LivroDAO e catch na TelaLivros. | Caixa de erro de conexao com tabela preservada. |
+| P5 | Operacoes de escrita precisavam separar erro de banco de registro inexistente. | SQLException precisava propagar PersistenciaException separado de false. | Propagacao de PersistenciaException nos metodos de escrita e TelaCadastroLivro. | TesteCorrecoes: P5 passou (6/6). |

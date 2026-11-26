@@ -1,0 +1,13 @@
+CREATE DATABASE IF NOT EXISTS bibliotech
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE bibliotech;
+
+CREATE TABLE IF NOT EXISTS livros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(150) NOT NULL,
+    autor VARCHAR(100) NOT NULL,
+    ano INT NOT NULL,
+    capa VARCHAR(255) NULL
+);
